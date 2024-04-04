@@ -1,9 +1,10 @@
 import notp from "notp";
 import crypto from "crypto";
 import b32 from "thirty-two";
+import qrcode from 'qrcode'
 import { Options } from "./interfaces";
 
-export function generateSecret(options?: Options) {
+export async function generateSecret(options?: Options) {
   const config = {
     name: encodeURIComponent(options?.name ?? "App"),
     account: encodeURIComponent(options?.account ? `:${options.account}` : ""),
@@ -21,13 +22,14 @@ export function generateSecret(options?: Options) {
     .toUpperCase();
 
   const query = `?secret=${secret}&issuer=${config.name}`
-  const encodedQuery = query.replace('?', '%3F').replace('&', '%26')
   const uri = `otpauth://totp/${config.name}${config.account}`
+
+  const qr = await qrcode.toDataURL(`${uri}${query}`, { errorCorrectionLevel: 'H' })
 
   return {
     secret,
     uri: `${uri}${query}`,
-    qr: `https://chart.googleapis.com/chart?chs=166x166&chld=L|0&cht=qr&chl=${uri}${encodedQuery}`
+    qr
   };
 }
 
